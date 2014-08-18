@@ -189,6 +189,8 @@ static void sqlite_regexp(sqlite3_context* context, int argc, sqlite3_value** va
     CDVPluginResult* pluginResult = nil;
     NSMutableDictionary *options = [command.arguments objectAtIndex:0];
 
+    NSString *dbFile = [options objectForKey:@"name"];
+    
     NSString *dbname = [self getDBPath:[options objectForKey:@"name"]];
     NSValue *dbPointer;
 
@@ -208,7 +210,7 @@ static void sqlite_regexp(sqlite3_context* context, int argc, sqlite3_value** va
             
             //Check if Database Exists and Copy
             if (![[NSFileManager defaultManager] fileExistsAtPath:dbname]) {
-            	[self copyPrepopulatedDatabase:dbfile withDbname:dbname];
+            	[self copyPrepopulatedDatabase:dbFile withDbname:dbname];
             }
 
             if (sqlite3_open(name, &db) != SQLITE_OK) {
