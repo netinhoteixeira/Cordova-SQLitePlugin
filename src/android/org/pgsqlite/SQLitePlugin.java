@@ -17,6 +17,11 @@ import android.database.sqlite.SQLiteStatement;
 import android.util.Base64;
 import android.util.Log;
 
+import java.io.FileOutputStream;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.IOException;
+
 import java.io.File;
 import java.lang.IllegalArgumentException;
 import java.lang.Number;
@@ -203,6 +208,7 @@ public class SQLitePlugin extends CordovaPlugin {
         File dbfile = this.cordova.getActivity().getDatabasePath(dbname);
 
         if (!dbfile.exists()) {
+            copyPrepopulatedDatabase(dbname, dbfile);
             dbfile.getParentFile().mkdirs();
         }
 
@@ -214,6 +220,51 @@ public class SQLitePlugin extends CordovaPlugin {
     }
 
     /**
+     * If a prepopulated DB file exists in the assets folder it is copied to the
+     * dbPath. Only runs the first time the app runs.
+     */
+    private void copyPrepopulatedDatabase(String dbname, File dbfile) {
+        InputStream in = null;
+        OutputStream out = null;
+
+        try {
+            in = this.cordova.getActivity().getAssets().open(dbname);
+            String dbPath = dbfile.getAbsolutePath();
+            dbPath = dbPath.substring(0, dbPath.lastIndexOf("/") + 1);
+            File dbPathFile = new File(dbPath);
+            if (!dbPathFile.exists()) {
+                dbPathFile.mkdirs();
+            }
+
+            File newDbFile = new File(dbPath + dbname);
+            out = new FileOutputStream(newDbFile);
+
+            byte[] buf = new byte[1024];
+            int len;
+            while ((len = in.read(buf)) > 0) {
+                out.write(buf, 0, len);
+            }
+
+            Log.v("info", "Copied prepopulated DB content to: " + newDbFile.getAbsolutePath());
+        } catch (IOException e) {
+            Log.v("copyPrepopulatedDatabase", "No prepopulated DB found, Error=" + e.getMessage());
+        } finally {
+            if (in != null) {
+                try {
+                    in.close();
+                } catch (IOException ignored) {
+                }
+            }
+
+            if (out != null) {
+                try {
+                    out.close();
+                } catch (IOException ignored) {
+                }
+            }
+        }
+    }
+
      * Close a database (in another thread).
      *
      * @param dbName   The name of the database file

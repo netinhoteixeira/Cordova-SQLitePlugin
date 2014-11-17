@@ -188,6 +188,8 @@ static void sqlite_regexp(sqlite3_context* context, int argc, sqlite3_value** va
 {
     CDVPluginResult* pluginResult = nil;
     NSMutableDictionary *options = [command.arguments objectAtIndex:0];
+    
+    NSString *dbFile = [options objectForKey:@"name"];
 
     NSString *dbname = [self getDBPath:[options objectForKey:@"name"]];
     NSValue *dbPointer;
@@ -205,6 +207,11 @@ static void sqlite_regexp(sqlite3_context* context, int argc, sqlite3_value** va
             const char *name = [dbname UTF8String];
             // NSLog(@"using db name: %@", dbname);
             sqlite3 *db;
+            
+            //Check if Database Exists and Copy
+            if (![[NSFileManager defaultManager] fileExistsAtPath:dbname]) {
+            	[self copyPrepopulatedDatabase:dbFile withDbname:dbname];
+            }
 
             if (sqlite3_open(name, &db) != SQLITE_OK) {
                 pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:@"Unable to open DB"];
@@ -239,6 +246,20 @@ static void sqlite_regexp(sqlite3_context* context, int argc, sqlite3_value** va
     [self.commandDelegate sendPluginResult:pluginResult callbackId: command.callbackId];
 
     // NSLog(@"open cb finished ok");
+}
+
+-(void)copyPrepopulatedDatabase:(NSString *)dbfile withDbname:(NSString *)dbname {
+    NSString *prepopulatedDb = [[NSBundle mainBundle] pathForResource:dbfile ofType:@".db"];
+    NSFileManager *fileManager = [NSFileManager defaultManager];
+    if([fileManager fileExistsAtPath:prepopulatedDb]) {
+        NSError *error;
+        BOOL success = [fileManager copyItemAtPath:prepopulatedDb toPath:dbname error:&error];
+
+        if(success)
+            NSLog(@"Copied prepopulated DB content to: %@", dbname);
+        else
+            NSLog(@"Unable to copy DB file: %@", [error localizedDescription]);
+    }
 }
 
 -(void) close: (CDVInvokedUrlCommand*)command
