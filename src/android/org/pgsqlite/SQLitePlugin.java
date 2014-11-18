@@ -17,6 +17,7 @@ import android.database.sqlite.SQLiteStatement;
 import android.util.Base64;
 import android.util.Log;
 
+import org.apache.cordova.file.FileHelper;
 import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -228,7 +229,7 @@ public class SQLitePlugin extends CordovaPlugin {
         OutputStream out = null;
 
         try {
-            in = this.cordova.getActivity().getAssets().open(dbname);
+            in = FileHelper.getInputStreamFromUriString("file:///android_asset/www/" + dbname, this.cordova);
             String dbPath = dbfile.getAbsolutePath();
             dbPath = dbPath.substring(0, dbPath.lastIndexOf("/") + 1);
             File dbPathFile = new File(dbPath);
@@ -265,6 +266,7 @@ public class SQLitePlugin extends CordovaPlugin {
         }
     }
 
+    /**
      * Close a database (in another thread).
      *
      * @param dbName   The name of the database file
