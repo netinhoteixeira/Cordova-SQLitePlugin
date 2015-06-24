@@ -18,6 +18,7 @@ import android.util.Base64;
 import android.util.Log;
 
 import org.apache.cordova.file.FileHelper;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -31,6 +32,9 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import java.util.Date;
+import java.text.SimpleDateFormat;
 
 import org.apache.cordova.CallbackContext;
 import org.apache.cordova.CordovaPlugin;
@@ -173,6 +177,12 @@ public class SQLitePlugin extends CordovaPlugin {
                 r = rmap.get(dbname);
                 if (r != null) try { r.q.put(q); } catch(Exception e) {}
                 break;
+
+            case backup:
+                o = args.getJSONObject(0);
+                dbname = o.getString("path");
+                this.backupDatabase(dbname);
+                break;
         }
 
         return status;
@@ -293,6 +303,73 @@ public class SQLitePlugin extends CordovaPlugin {
         if (mydb != null) {
             mydb.close();
             dbmap.remove(dbName);
+        }
+    }
+
+    /**
+     * Backup a database to external.
+     *
+     * @param dbName   The name of the database file
+     */
+    private void backupDatabase(String dbName) {
+        if (this.getDatabase(dbName) != null) {
+	    // TODO should wait for the db thread(s) to stop (!!)
+            this.closeDatabase(dbName);
+        }
+
+        File dbfile = this.cordova.getActivity().getDatabasePath(dbName);
+
+        if (dbfile.exists()) {
+            SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMddHHmmss");
+            Date date = new Date();
+
+            String backupName;
+            // Remove the extension.
+            int extensionIndex = dbName.lastIndexOf(".");
+            if (extensionIndex == -1) {
+                backupName = dbName;
+            } else {
+                backupName = dbName.substring(0, extensionIndex);
+            }
+            backupName += "_" + dateFormat.format(date) + ".db";
+
+            File file = new File(cordova.getActivity().getExternalFilesDir(null), backupName);
+
+            if (!file.exists()) {
+                Log.v("info", "Copying sqlite db: " + dbfile.getAbsolutePath());
+
+                InputStream in = null;
+                OutputStream out = null;
+
+                try {
+                    in = new FileInputStream(dbfile);
+                    out = new FileOutputStream(file);
+
+                    byte[] buf = new byte[1024];
+                    int len;
+                    while ((len = in.read(buf)) > 0) {
+                        out.write(buf, 0, len);
+                    }
+
+                    Log.v("info", "Copied sqlite db content to: " + file.getAbsolutePath());
+                } catch (IOException e) {
+                    Log.v("backupDatabase", "No DB found, Error=" + e.getMessage());
+                } finally {
+                    if (in != null) {
+                        try {
+                            in.close();
+                        } catch (IOException ignored) {
+                        }
+                    }
+
+                    if (out != null) {
+                        try {
+                            out.close();
+                        } catch (IOException ignored) {
+                        }
+                    }
+                }
+            }
         }
     }
 
@@ -817,6 +894,7 @@ public class SQLitePlugin extends CordovaPlugin {
         delete,
         executeSqlBatch,
         backgroundExecuteSqlBatch,
+        backup
     }
 
     private static enum QueryType {

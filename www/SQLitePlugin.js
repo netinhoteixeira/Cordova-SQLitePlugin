@@ -406,6 +406,13 @@
           path: databaseName
         }
       ]);
+    },
+    backupDb: function(databaseName, success, error) {
+      return cordova.exec(success, error, "SQLitePlugin", "backup", [
+        {
+          path: databaseName
+        }
+      ]);
     }
   };
 
@@ -414,7 +421,8 @@
       isSQLitePlugin: true
     },
     openDatabase: SQLiteFactory.opendb,
-    deleteDatabase: SQLiteFactory.deleteDb
+    deleteDatabase: SQLiteFactory.deleteDb,
+    backupDatabase: SQLiteFactory.backupDb
   };
 
 }).call(this);
