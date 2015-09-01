@@ -17,7 +17,7 @@ import android.database.sqlite.SQLiteStatement;
 import android.util.Base64;
 import android.util.Log;
 
-import org.apache.cordova.file.FileHelper;
+import org.pgsqlite.FileHelper;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.InputStream;
