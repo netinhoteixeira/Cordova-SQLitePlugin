@@ -35,6 +35,7 @@
         </config-file>
 
         <source-file src="src/android/org/pgsqlite/SQLitePlugin.java" target-dir="src/org/pgsqlite"/>
+        <source-file src="src/android/org/pgsqlite/FileHelper.java" target-dir="src/org/pgsqlite"/>
     </platform>
 
     <!-- android -->
@@ -53,6 +54,7 @@
         </config-file>
 
         <source-file src="src/android/org/pgsqlite/SQLitePlugin.java" target-dir="src/org/pgsqlite"/>
+        <source-file src="src/android/org/pgsqlite/FileHelper.java" target-dir="src/org/pgsqlite"/>
     </platform>
 
     <!-- ios -->
